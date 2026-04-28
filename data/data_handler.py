@@ -4,24 +4,36 @@ import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder, OrdinalEncoder
 from sklearn.model_selection import train_test_split
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
 PATH="data"
-def load_ai4i():
-    # fetch dataset 
-    ai4i_2020_predictive_maintenance_dataset = fetch_ucirepo(id=601) 
-    # data (as pandas dataframes) 
-    X = ai4i_2020_predictive_maintenance_dataset.data.features 
-    y = ai4i_2020_predictive_maintenance_dataset.data.targets
 
-    y['sum'] = y[["TWF", "HDF", "PWF", "OSF", "RNF"]].sum(axis=1)
-    y= y[y['sum']<2]
-    y['none'] = 1-y['sum']
-    y = y[["none", "TWF", "HDF", "PWF", "OSF", "RNF"]]
-    X = X.iloc[y.index]
-    feature_names=X.columns
-    labels = list(y.columns.values)
-    y = y.idxmax(axis=1)
-    labels = y.unique()
-    return X, y, feature_names, labels
+def load_kaggle_dataset(dataset: str, save_dir: str = "data",file_name = None, file_type="csv"):
+    path = kagglehub.dataset_download(dataset)
+
+    for root, _ , files in os.walk(path):
+        for file in files:
+            if file.endswith(file_type):
+                full_path = os.path.join(root, file)
+                save_path = os.path.join(PATH, save_dir)
+                os.makedirs(save_path, exist_ok=True)
+    
+                save_name = os.path.join(save_path, file)
+                if file_name is not None:
+                    save_name = os.path.join(save_path, file_name)
+                if file_type == "csv":
+                    df = pd.read_csv(full_path)
+                    df.to_csv(save_name)
+                    if file_name is not None:
+                        return df
+                elif file_type == "json":
+                    df = pd.read_json(full_path)
+                    df.to_csv(save_name)
+                    if file_name is not None:
+                        return df 
+                              
+                else:
+                    raise FileNotFoundError(f"No {file_type} file found")
 
 def load_ai4i_b():
     # fetch dataset 
@@ -42,25 +54,34 @@ def load_ai4i_b():
     return X, y, feature_names, labels
 
 def load_CIA():
-    df = pd.read_csv(os.path.join(PATH,"KagglePredictive Maintenance of Machines/CIA-1 Dataset.csv"))
-    X = df.iloc[:, :-1]  # Features
-    y = df.iloc[:, -1]  # Labels
-    feature_names=X.columns
-    labels = list(y.unique()) #labels = {key:value for key,value in enumerate(labels = list(y.columns.values))}
-    return X, y, feature_names, labels
-
-def load_CIA():
-    df = pd.read_csv(os.path.join(PATH,"KagglePredictive Maintenance of Machines/CIA-1 Dataset.csv"))
-
+    file_name = "CIA-1 Dataset.csv"
+    dir_name = "KagglePredictive Maintenance of Machines"
+    dir_path = os.path.join(PATH, dir_name)
+    file_path = os.path.join(dir_path,file_name)
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path)
+    else:
+        df = load_kaggle_dataset("nair26/predictive-maintenance-of-machines",
+                                 dir_name,
+                                 file_name)
     X = df.iloc[:, :-1]  # Features
     y = df.iloc[:, -1]  # Labels
     feature_names=X.columns
     labels = list(y.unique()) #
-    #labels = {key:value for key,value in enumerate( list(y.unique()))}
     return X, y, feature_names, labels
 
 def load_pump():
-    df = pd.read_csv(os.path.join(PATH,"pump/sensor.csv"))
+    file_name = "sensor.csv"
+    dir_name = "pump"
+    url = "nphantawee/pump-sensor-data"
+    dir_path = os.path.join(PATH, dir_name)
+    file_path = os.path.join(dir_path,file_name)
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path)
+    else:
+        df = load_kaggle_dataset(url,
+                                 dir_name,
+                                 file_name)
     df.drop(['sensor_15'], axis=1,inplace=True)
 
     df['machine_status'] = df['machine_status'].shift(periods=-1)
@@ -73,6 +94,17 @@ def load_pump():
     return X, y, feature_names, labels
 
 def preprocess_azure():
+    file_name = "azure.csv"
+    dir_name = "microsoft-azure-predictive-maintenance"
+    url = "arnabbiswas1/microsoft-azure-predictive-maintenance"
+    dir_path = os.path.join(PATH, dir_name)
+    file_path = os.path.join(dir_path,file_name)
+    if not os.path.exists(file_path):
+        load_kaggle_dataset(url,
+                            dir_name)
+        load_kaggle_dataset("arnabbiswas1/microsoft-azure-predictive-maintenance/versions/2",
+                                 dir_name)
+        
     telemetry = pd.read_csv(os.path.join(PATH,'microsoft-azure-predictive-maintenance/PdM_telemetry.csv'))
     errors = pd.read_csv(os.path.join(PATH,'microsoft-azure-predictive-maintenance/PdM_errors.csv'))
     maint = pd.read_csv(os.path.join(PATH,'microsoft-azure-predictive-maintenance/PdM_maint.csv'))
@@ -146,6 +178,8 @@ def preprocess_azure():
                                 telemetry_mean_24h.iloc[:, 2:6],
                                 telemetry_sd_24h.iloc[:, 2:6]], axis=1).dropna()
     error_count = pd.get_dummies(errors.set_index('datetime')).reset_index()
+    if "Unnamed: 0" in error_count.columns:
+        error_count.drop(columns=["Unnamed: 0"],inplace= True)
     error_count.columns = ['datetime', 'machineID','error1', 'error2', 'error3', 'error4', 'error5']
     error_count = telemetry[['datetime', 'machineID']].merge(error_count, on=['machineID', 'datetime'], how='left').fillna(0.0)
     temp = []
@@ -162,7 +196,10 @@ def preprocess_azure():
     error_count.columns = [i + 'count' for i in fields]
     error_count.reset_index(inplace=True)
     error_count = error_count.dropna()
+
     comp_rep = pd.get_dummies(maint.set_index('datetime')).reset_index()
+    if "Unnamed: 0" in comp_rep.columns:
+        comp_rep.drop(columns=["Unnamed: 0"],inplace= True)
     comp_rep.columns = ['datetime', 'machineID',
                         'comp1', 'comp2', 'comp3', 'comp4']
 
