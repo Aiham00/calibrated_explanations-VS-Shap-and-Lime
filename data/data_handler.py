@@ -35,7 +35,7 @@ def load_kaggle_dataset(dataset: str, save_dir: str = "data",file_name = None, f
                 else:
                     raise FileNotFoundError(f"No {file_type} file found")
 
-def load_ai4i_b():
+def load_ai4i():
     # fetch dataset 
     ai4i_2020_predictive_maintenance_dataset = fetch_ucirepo(id=601) 
     # data (as pandas dataframes) 

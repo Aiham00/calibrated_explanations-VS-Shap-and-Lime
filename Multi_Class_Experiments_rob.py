@@ -48,7 +48,7 @@ def test_robustness():
     datasets = {
         "CIA": data_handler.load_CIA(),
         "AI4I": data_handler.load_ai4i(),
-        "Azure": data_handler.load_azure(True),
+        "Azure": data_handler.load_azure(),
         "Pump": data_handler.load_pump()
     }
     tic_all = time.time()
@@ -200,4 +200,4 @@ def test_robustness():
     toc_all = time.time()
     debug_print(str(toc_data-tic_data),is_debug )
 
-test_robustness()
+#test_robustness()

@@ -205,4 +205,4 @@ def test_stability():
 
     toc_all = time.time()
     debug_print(str(toc_data-tic_data),is_debug )
-test_stability()
+#test_stability()
