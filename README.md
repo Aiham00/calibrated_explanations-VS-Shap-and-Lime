@@ -56,17 +56,17 @@ For Calibrated Explanations, the calibration is already incorporated into the `C
 
 2. Install the required packages:
 ----------------------------------------
-numpy                     : 2.1.3
-scipy                     : 1.15.1
-pandas                    : 2.2.3
-scikit-learn              : 1.6.1
-xgboost                   : 3.0.0
-torch                     : 2.6.0+cpu
-torchvision               : 0.21.0+cpu
-lime                      : 0.2.0.1
-shap                      : 0.46.0
-calibrated-explanations   : v0.11.0-dev
-venn-abers                : 1.4.6
-jupyter-notebook          : 7.5.5
+- numpy                     : 2.1.3
+- scipy                     : 1.15.1
+- pandas                    : 2.2.3
+- scikit-learn              : 1.6.1
+- xgboost                   : 3.0.0
+- torch                     : 2.6.0+cpu
+- torchvision               : 0.21.0+cpu
+- lime                      : 0.2.0.1
+- shap                      : 0.46.0
+- calibrated-explanations   : v0.11.0-dev
+- venn-abers                : 1.4.6
+- jupyter-notebook          : 7.5.5
 
 3. Running the experiments by runing all cells in jupyter notebook Multi_Classification_Analysis.ipynb
