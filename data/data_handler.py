@@ -234,11 +234,10 @@ def preprocess_azure():
     
 def load_azure(preprocessed=False):
     df = pd.DataFrame()
-    if preprocessed:
-        df =  pd.read_csv(os.path.join(PATH,'microsoft-azure-predictive-maintenance/azure.csv'),sep=";")
-    else:
+    if not preprocessed:
         df = preprocess_azure()
-
+    df =  pd.read_csv(os.path.join(PATH,'microsoft-azure-predictive-maintenance/azure.csv'),sep=";")
+        
     X = df.iloc[:, :-1]  # Features
     y = df.iloc[:, -1]  # Labels
     feature_names=X.columns
